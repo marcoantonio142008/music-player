@@ -13,11 +13,13 @@ export default function InicioView() {
     <div className="space-y-8">
       {/* Greeting */}
       <div>
-        <h1 className="text-3xl font-bold text-text-primary">
+        <h1 className="text-3xl font-bold italic gradient-text">
           {getGreeting()}
         </h1>
         <p className="text-text-secondary text-sm mt-1">
-          {songs.length} {songs.length === 1 ? "canción" : "canciones"} en tu biblioteca
+          {songs.length === 0
+            ? "No hay canciones cargadas"
+            : `${songs.length} ${songs.length === 1 ? "canción" : "canciones"} en tu biblioteca`}
         </p>
       </div>
 
@@ -30,7 +32,7 @@ export default function InicioView() {
               <button
                 key={song.id}
                 onClick={() => play(song)}
-                className="flex items-center gap-3 bg-white/[0.04] hover:bg-white/[0.07] rounded-xl p-2.5 transition-all text-left group"
+                className="flex items-center gap-3 purple-glass rounded-xl p-2.5 transition-all text-left group hover:bg-white/5"
               >
                 <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
                   {song.coverUrl ? (
@@ -69,7 +71,7 @@ export default function InicioView() {
                 onClick={() => play(song)}
                 className="flex flex-col items-center gap-2.5 flex-shrink-0 w-36 group"
               >
-                <div className="w-36 h-36 rounded-xl overflow-hidden shadow-lg shadow-black/20">
+                <div className="w-36 h-36 rounded-xl overflow-hidden soft-shadow">
                   {song.coverUrl ? (
                     <img src={song.coverUrl} alt="" className="w-full h-full object-cover" />
                   ) : (
@@ -110,15 +112,22 @@ export default function InicioView() {
 function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
-      <div className="w-20 h-20 rounded-2xl bg-bg-card flex items-center justify-center mb-6">
-        <svg className="w-10 h-10 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-        </svg>
+      <div className="w-24 h-24 rounded-2xl purple-glass flex items-center justify-center mb-6 glow-violet">
+        <span className="text-4xl font-bold gradient-text">M</span>
       </div>
-      <h3 className="text-lg font-semibold text-text-primary mb-2">Tu biblioteca está vacía</h3>
-      <p className="text-sm text-text-secondary max-w-xs">
-        Importá tu música usando el botón de abajo para comenzar a reproducir
+      <h3 className="text-xl font-semibold text-text-primary mb-2">Tu biblioteca está vacía</h3>
+      <p className="text-sm text-text-secondary max-w-xs mb-6">
+        Importá tu música usando el botón abajo para comenzar a reproducir
       </p>
+      <button
+        onClick={() => document.querySelector<HTMLInputElement>('input[type="file"]')?.click()}
+        className="gradient-btn px-6 py-3 rounded-full text-white font-medium flex items-center gap-2"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+        Importar música
+      </button>
     </div>
   );
 }

@@ -99,16 +99,16 @@ export default function Player() {
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/5 bg-bg-secondary">
+    <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-accent-violet/10 bg-bg-player glass">
       {isVisualizerOpen && (
-        <div className="px-6 pt-4 bg-bg-secondary border-b border-white/5">
+        <div className="px-6 pt-4 bg-bg-player border-b border-accent-violet/10">
           <AudioVisualizer />
         </div>
       )}
 
       <div
         ref={progressBarRef}
-        className="h-1.5 bg-white/5 cursor-pointer group relative"
+        className="h-1.5 bg-accent-violet/10 cursor-pointer group relative"
         onClick={handleProgressClick}
         onMouseMove={handleProgressDrag}
       >
@@ -116,7 +116,7 @@ export default function Player() {
           className="h-full transition-all duration-150"
           style={{
             width: `${progress}%`,
-            background: "linear-gradient(90deg, #8b5cf6, #ec4899)",
+            background: "linear-gradient(90deg, #a78bfa, #c084fc)",
           }}
         />
         <div

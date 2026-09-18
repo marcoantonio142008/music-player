@@ -17,7 +17,7 @@ export default function TopBar({ currentView, onViewChange }: TopBarProps) {
   ];
 
   return (
-    <header className="flex items-center gap-4 px-6 py-4 border-b border-white/5 bg-bg-primary/80 glass sticky top-0 z-40">
+    <header className="flex items-center gap-4 px-6 py-4 border-b border-accent-violet/10 bg-bg-primary/50 glass sticky top-0 z-40">
       {/* Tabs */}
       <nav className="hidden sm:flex items-center gap-1">
         {tabs.map((tab) => (
@@ -26,8 +26,8 @@ export default function TopBar({ currentView, onViewChange }: TopBarProps) {
             onClick={() => onViewChange(tab.id)}
             className={`px-4 py-2 rounded-lg text-sm font-semibold tracking-wide transition-all ${
               currentView === tab.id
-                ? "text-text-primary bg-white/5"
-                : "text-text-muted hover:text-text-secondary"
+                ? "text-accent-violet bg-accent-violet/10"
+                : "text-text-muted hover:text-text-secondary hover:bg-white/5"
             }`}
           >
             {tab.label}
@@ -56,7 +56,7 @@ export default function TopBar({ currentView, onViewChange }: TopBarProps) {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar"
-            className="w-full pl-10 pr-4 py-2.5 bg-bg-card rounded-xl text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-accent-violet/40 transition-all"
+            className="w-full pl-10 pr-4 py-2.5 purple-glass rounded-xl text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-accent-violet/40 transition-all"
           />
           {searchQuery && (
             <button

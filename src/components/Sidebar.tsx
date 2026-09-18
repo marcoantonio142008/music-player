@@ -41,10 +41,10 @@ export default function Sidebar({ currentView, onViewChange, onSelectPlaylist, o
   ];
 
   return (
-    <aside className="hidden md:flex flex-col w-64 bg-bg-secondary border-r border-white/5 py-5 px-3 flex-shrink-0 overflow-y-auto">
+    <aside className="hidden md:flex flex-col w-64 purple-glass py-5 px-3 flex-shrink-0 overflow-y-auto rounded-r-2xl">
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-3 mb-8">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-violet to-accent-pink flex items-center justify-center">
+        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-violet to-accent-pink flex items-center justify-center glow-violet">
           <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
             <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
           </svg>
@@ -62,8 +62,8 @@ export default function Sidebar({ currentView, onViewChange, onSelectPlaylist, o
             onClick={() => onViewChange(item.id)}
             className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
               currentView === item.id
-                ? "bg-white/5 text-text-primary"
-                : "text-text-secondary hover:text-text-primary hover:bg-white/[0.03]"
+                ? "bg-accent-violet/20 text-accent-violet"
+                : "text-text-secondary hover:text-text-primary hover:bg-white/5"
             }`}
           >
             {item.icon}
@@ -73,7 +73,7 @@ export default function Sidebar({ currentView, onViewChange, onSelectPlaylist, o
       </nav>
 
       {/* Divider */}
-      <div className="h-px bg-white/5 mx-3 mb-6" />
+      <div className="h-px bg-accent-violet/10 mx-3 mb-6" />
 
       {/* Quick Access */}
       <div className="px-3 mb-3">
@@ -88,8 +88,8 @@ export default function Sidebar({ currentView, onViewChange, onSelectPlaylist, o
             onClick={() => onSelectQuickAccess?.(item.id)}
             className={`flex items-center justify-between px-3 py-2 rounded-xl text-sm transition-all ${
               currentView === "biblioteca"
-                ? "bg-white/5 text-text-primary"
-                : "text-text-secondary hover:text-text-primary hover:bg-white/[0.03]"
+                ? "bg-accent-violet/20 text-accent-violet"
+                : "text-text-secondary hover:text-text-primary hover:bg-white/5"
             }`}
           >
             <span className="truncate">{item.label}</span>
@@ -101,7 +101,7 @@ export default function Sidebar({ currentView, onViewChange, onSelectPlaylist, o
       {/* Playlists */}
       {playlists.length > 0 && (
         <>
-          <div className="h-px bg-white/5 mx-3 mb-4" />
+          <div className="h-px bg-accent-violet/10 mx-3 mb-4" />
           <div className="px-3 mb-3">
             <h3 className="text-[11px] font-semibold text-text-muted uppercase tracking-wider mb-3">
               Tus álbumes
@@ -112,7 +112,7 @@ export default function Sidebar({ currentView, onViewChange, onSelectPlaylist, o
               <button
                 key={playlist.id}
                 onClick={() => onSelectPlaylist?.(playlist.id)}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-text-secondary hover:text-text-primary hover:bg-white/[0.03] transition-all"
+                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-text-secondary hover:text-text-primary hover:bg-white/5 transition-all"
               >
                 <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
@@ -127,7 +127,7 @@ export default function Sidebar({ currentView, onViewChange, onSelectPlaylist, o
 
       {/* Import button at bottom */}
       <div className="mt-auto pt-4 px-3">
-        <div className="h-px bg-white/5 mb-4" />
+        <div className="h-px bg-accent-violet/10 mb-4" />
         <p className="text-[10px] text-text-muted text-center">
           {songs.length} {songs.length === 1 ? "canción" : "canciones"} en tu biblioteca
         </p>
