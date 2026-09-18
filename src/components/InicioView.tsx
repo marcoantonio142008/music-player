@@ -1,6 +1,7 @@
 "use client";
 
 import { useAudioStore } from "@/lib/audioStore";
+import SongItem from "./SongItem";
 
 export default function InicioView() {
   const songs = useAudioStore((s) => s.songs);
@@ -20,7 +21,7 @@ export default function InicioView() {
         </p>
       </div>
 
-      {/* Quick play grid */}
+      {/* Quick play grid - Favoritos */}
       {favorites.length > 0 && (
         <section>
           <h2 className="text-lg font-bold text-text-primary mb-4">Favoritos</h2>
@@ -89,35 +90,13 @@ export default function InicioView() {
         </section>
       )}
 
-      {/* All songs */}
+      {/* All songs - using SongItem with full controls */}
       {songs.length > 0 && (
         <section>
           <h2 className="text-lg font-bold text-text-primary mb-4">Todas tus canciones</h2>
-          <div className="space-y-1">
+          <div className="space-y-0.5">
             {songs.map((song, index) => (
-              <div
-                key={song.id}
-                onClick={() => play(song)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.04] cursor-pointer transition-all group"
-              >
-                <span className="w-6 text-center text-xs text-text-muted">{index + 1}</span>
-                <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
-                  {song.coverUrl ? (
-                    <img src={song.coverUrl} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-accent-violet to-accent-pink flex items-center justify-center">
-                      <svg className="w-4 h-4 text-white/70" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
-                      </svg>
-                    </div>
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm text-text-primary truncate">{song.title}</p>
-                  <p className="text-xs text-text-secondary truncate">{song.artist}</p>
-                </div>
-                <span className="text-xs text-text-muted">{formatTime(song.duration)}</span>
-              </div>
+              <SongItem key={song.id} song={song} index={index} />
             ))}
           </div>
         </section>
@@ -142,13 +121,6 @@ function EmptyState() {
       </p>
     </div>
   );
-}
-
-function formatTime(seconds: number): string {
-  if (!seconds || isNaN(seconds)) return "0:00";
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
 
 function getGreeting(): string {

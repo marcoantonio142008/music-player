@@ -61,6 +61,12 @@ export default function Home() {
     setBibliotecaSubView(`playlist-${id}`);
   };
 
+  const handleSelectQuickAccess = (id: string) => {
+    setCurrentView("biblioteca");
+    setSelectedPlaylistId(null);
+    setBibliotecaSubView(id);
+  };
+
   return (
     <div className="flex h-screen overflow-hidden bg-bg-primary" onDrop={handleDrop} onDragOver={handleDragOver}>
       {/* Sidebar - desktop only */}
@@ -69,8 +75,10 @@ export default function Home() {
         onViewChange={(view) => {
           setCurrentView(view);
           setSelectedPlaylistId(null);
+          setBibliotecaSubView("all");
         }}
         onSelectPlaylist={handleSelectPlaylist}
+        onSelectQuickAccess={handleSelectQuickAccess}
       />
 
       {/* Main content */}
@@ -110,6 +118,7 @@ export default function Home() {
           setBibliotecaSubView("all");
         }}
         onOpenDrawer={() => setDrawerOpen(true)}
+        onSelectQuickAccess={handleSelectQuickAccess}
       />
 
       {/* Mobile playlist drawer */}

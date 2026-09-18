@@ -6,9 +6,10 @@ interface MobileNavProps {
   currentView: string;
   onViewChange: (view: string) => void;
   onOpenDrawer: () => void;
+  onSelectQuickAccess?: (id: string) => void;
 }
 
-export default function MobileNav({ currentView, onViewChange, onOpenDrawer }: MobileNavProps) {
+export default function MobileNav({ currentView, onViewChange, onOpenDrawer, onSelectQuickAccess }: MobileNavProps) {
   const playlists = useAudioStore((s) => s.playlists);
   const songs = useAudioStore((s) => s.songs);
   const favorites = songs.filter((s) => s.liked);
@@ -47,7 +48,7 @@ export default function MobileNav({ currentView, onViewChange, onOpenDrawer }: M
       label: "Favoritos",
       badge: favorites.length > 0 ? favorites.length : undefined,
       icon: (
-        <svg className="w-5 h-5" fill={currentView === "favorites" ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-5 h-5" fill={currentView === "biblioteca" ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
         </svg>
       ),
@@ -64,7 +65,7 @@ export default function MobileNav({ currentView, onViewChange, onOpenDrawer }: M
               if (item.id === "playlists") {
                 onOpenDrawer();
               } else if (item.id === "favorites") {
-                onViewChange("biblioteca");
+                onSelectQuickAccess?.("favorites");
               } else {
                 onViewChange(item.id);
               }

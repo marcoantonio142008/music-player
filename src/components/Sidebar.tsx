@@ -6,9 +6,10 @@ interface SidebarProps {
   currentView: string;
   onViewChange: (view: string) => void;
   onSelectPlaylist?: (id: string) => void;
+  onSelectQuickAccess?: (id: string) => void;
 }
 
-export default function Sidebar({ currentView, onViewChange, onSelectPlaylist }: SidebarProps) {
+export default function Sidebar({ currentView, onViewChange, onSelectPlaylist, onSelectQuickAccess }: SidebarProps) {
   const songs = useAudioStore((s) => s.songs);
   const playlists = useAudioStore((s) => s.playlists);
   const favorites = songs.filter((s) => s.liked);
@@ -84,9 +85,9 @@ export default function Sidebar({ currentView, onViewChange, onSelectPlaylist }:
         {quickAccess.map((item) => (
           <button
             key={item.id}
-            onClick={() => onViewChange(item.id)}
+            onClick={() => onSelectQuickAccess?.(item.id)}
             className={`flex items-center justify-between px-3 py-2 rounded-xl text-sm transition-all ${
-              currentView === item.id
+              currentView === "biblioteca"
                 ? "bg-white/5 text-text-primary"
                 : "text-text-secondary hover:text-text-primary hover:bg-white/[0.03]"
             }`}
