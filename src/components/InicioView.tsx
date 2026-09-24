@@ -13,10 +13,10 @@ export default function InicioView() {
     <div className="space-y-8 stagger">
       {/* Greeting */}
       <div>
-        <h1 className="text-3xl font-bold italic gradient-text">
+        <h1 className="text-4xl md:text-6xl font-extrabold italic leading-[1.08] pb-1 tracking-tight gradient-text">
           {getGreeting()}
         </h1>
-        <p className="text-text-secondary text-sm mt-1">
+        <p className="text-text-secondary text-sm mt-2">
           {songs.length === 0
             ? "No hay canciones cargadas"
             : `${songs.length} ${songs.length === 1 ? "canción" : "canciones"} en tu biblioteca`}
@@ -26,7 +26,7 @@ export default function InicioView() {
       {/* Quick play grid - Favoritos */}
       {favorites.length > 0 && (
         <section>
-          <h2 className="text-lg font-bold text-text-primary mb-4">Favoritos</h2>
+          <h2 className="text-xl font-bold text-text-primary mb-4 tracking-tight">Favoritos</h2>
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
             {favorites.slice(0, 6).map((song) => (
               <button
@@ -63,7 +63,7 @@ export default function InicioView() {
       {/* Recently added */}
       {recentSongs.length > 0 && (
         <section>
-          <h2 className="text-lg font-bold text-text-primary mb-4">Agregadas recientemente</h2>
+          <h2 className="text-xl font-bold text-text-primary mb-4 tracking-tight">Agregadas recientemente</h2>
           <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
             {recentSongs.map((song) => (
               <button
@@ -95,7 +95,7 @@ export default function InicioView() {
       {/* All songs - using SongItem with full controls */}
       {songs.length > 0 && (
         <section>
-          <h2 className="text-lg font-bold text-text-primary mb-4">Todas tus canciones</h2>
+          <h2 className="text-xl font-bold text-text-primary mb-4 tracking-tight">Todas tus canciones</h2>
           <div className="space-y-0.5">
             {songs.map((song, index) => (
               <SongItem key={song.id} song={song} index={index} />

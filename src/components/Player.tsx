@@ -99,7 +99,7 @@ export default function Player() {
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-accent-violet/10 bg-bg-player glass">
+    <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-accent-violet/15 bg-bg-player glass shadow-[0_-10px_40px_-15px_rgba(167,139,250,0.35)]">
       {isVisualizerOpen && (
         <div className="px-6 pt-4 bg-bg-player border-b border-accent-violet/10">
           <AudioVisualizer />
