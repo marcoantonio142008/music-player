@@ -43,7 +43,7 @@ export default function AddToPlaylistMenu({ songId, onClose }: AddToPlaylistMenu
 
       {/* Menu - positioned relative to parent */}
       <div
-        className="absolute right-0 top-full mt-1 z-50 bg-bg-card border border-white/10 rounded-xl shadow-2xl shadow-black/40 py-2 min-w-[220px]"
+        className="absolute right-0 top-full mt-1 z-50 bg-bg-card border border-white/10 rounded-xl shadow-2xl shadow-violet-950/50 py-2 min-w-[220px]"
         onClick={(e) => e.stopPropagation()}
       >
         <button

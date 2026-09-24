@@ -299,7 +299,7 @@ export default function BibliotecaView({ subView, onSubViewChange, selectedPlayl
                     onClick={() => play(artist.songs[0])}
                     className="flex flex-col items-center gap-3 group"
                   >
-                    <div className="w-full aspect-square rounded-full overflow-hidden shadow-lg shadow-black/20 bg-bg-card">
+                    <div className="w-full aspect-square rounded-full overflow-hidden shadow-lg shadow-violet-950/40 bg-bg-card">
                       {artist.cover ? (
                         <img src={artist.cover} alt="" className="w-full h-full object-cover" />
                       ) : (
@@ -335,7 +335,7 @@ export default function BibliotecaView({ subView, onSubViewChange, selectedPlayl
                     onClick={() => play(album.songs[0])}
                     className="flex flex-col items-center gap-3 group"
                   >
-                    <div className="w-full aspect-square rounded-xl overflow-hidden shadow-lg shadow-black/20">
+                    <div className="w-full aspect-square rounded-xl overflow-hidden shadow-lg shadow-violet-950/40">
                       {album.cover ? (
                         <img src={album.cover} alt="" className="w-full h-full object-cover" />
                       ) : (

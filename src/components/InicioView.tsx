@@ -10,7 +10,7 @@ export default function InicioView() {
   const recentSongs = songs.slice(-8).reverse();
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 stagger">
       {/* Greeting */}
       <div>
         <h1 className="text-3xl font-bold italic gradient-text">
@@ -32,7 +32,7 @@ export default function InicioView() {
               <button
                 key={song.id}
                 onClick={() => play(song)}
-                className="flex items-center gap-3 purple-glass rounded-xl p-2.5 transition-all text-left group hover:bg-white/5"
+                className="flex items-center gap-3 purple-glass rounded-xl p-2.5 transition-all text-left group hover:bg-white/5 card-lift"
               >
                 <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
                   {song.coverUrl ? (
@@ -69,7 +69,7 @@ export default function InicioView() {
               <button
                 key={song.id}
                 onClick={() => play(song)}
-                className="flex flex-col items-center gap-2.5 flex-shrink-0 w-36 group"
+                className="flex flex-col items-center gap-2.5 flex-shrink-0 w-36 group card-lift"
               >
                 <div className="w-36 h-36 rounded-xl overflow-hidden soft-shadow">
                   {song.coverUrl ? (
