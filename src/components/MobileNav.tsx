@@ -9,6 +9,16 @@ interface MobileNavProps {
   onSelectQuickAccess?: (id: string) => void;
 }
 
+const iconProps = {
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 1.7,
+  strokeLinecap: "round" as const,
+  strokeLinejoin: "round" as const,
+  viewBox: "0 0 24 24",
+  "aria-hidden": true,
+};
+
 export default function MobileNav({ currentView, onViewChange, onOpenDrawer, onSelectQuickAccess }: MobileNavProps) {
   const playlists = useAudioStore((s) => s.playlists);
   const songs = useAudioStore((s) => s.songs);
@@ -18,18 +28,21 @@ export default function MobileNav({ currentView, onViewChange, onOpenDrawer, onS
     {
       id: "inicio",
       label: "Inicio",
+      badge: undefined as number | undefined,
       icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        <svg className="h-5 w-5" {...iconProps}>
+          <path d="M3 10.5 12 3l9 7.5" />
+          <path d="M5 9.5V21h14V9.5" />
         </svg>
       ),
     },
     {
       id: "biblioteca",
       label: "Biblioteca",
+      badge: undefined as number | undefined,
       icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+        <svg className="h-5 w-5" {...iconProps}>
+          <path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" />
         </svg>
       ),
     },
@@ -38,8 +51,8 @@ export default function MobileNav({ currentView, onViewChange, onOpenDrawer, onS
       label: "Álbumes",
       badge: playlists.length > 0 ? playlists.length : undefined,
       icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+        <svg className="h-5 w-5" {...iconProps}>
+          <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
         </svg>
       ),
     },
@@ -48,15 +61,19 @@ export default function MobileNav({ currentView, onViewChange, onOpenDrawer, onS
       label: "Favoritos",
       badge: favorites.length > 0 ? favorites.length : undefined,
       icon: (
-        <svg className="w-5 h-5" fill={currentView === "biblioteca" ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+        <svg
+          className="h-5 w-5"
+          {...iconProps}
+          fill={currentView === "biblioteca" ? "currentColor" : "none"}
+        >
+          <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
         </svg>
       ),
     },
   ];
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-bg-secondary/95 backdrop-blur-xl border-t border-white/5 px-2 pb-[env(safe-area-inset-bottom)]">
+    <nav className="fixed right-0 bottom-0 left-0 z-40 border-t border-white/[.07] bg-bg-secondary/95 px-2 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden">
       <div className="flex items-center justify-around py-1">
         {items.map((item) => (
           <button
@@ -70,16 +87,16 @@ export default function MobileNav({ currentView, onViewChange, onOpenDrawer, onS
                 onViewChange(item.id);
               }
             }}
-            className={`relative flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-colors ${
+            className={`relative flex flex-col items-center gap-0.5 rounded-xl px-3 py-2 transition-colors duration-150 ease-[cubic-bezier(.22,1,.36,1)] ${
               currentView === item.id
-                ? "text-accent-violet"
-                : "text-text-muted"
+                ? "text-accent"
+                : "text-text-muted hover:text-text-secondary"
             }`}
           >
             {item.icon}
             <span className="text-[10px] font-medium">{item.label}</span>
             {item.badge && (
-              <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-accent-pink text-[9px] font-bold text-white flex items-center justify-center">
+              <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-white/[.14] px-1 font-mono text-[9px] font-medium text-text-primary">
                 {item.badge}
               </span>
             )}

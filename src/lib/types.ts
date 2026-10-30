@@ -7,6 +7,8 @@ export interface Song {
   album: string;
   duration: number;
   coverUrl: string | null;
+  /** True once the automatic lookup ran and found nothing. Stops re-queries. */
+  coverSearchTried: boolean;
   liked: boolean;
 }
 
@@ -42,12 +44,18 @@ export interface PlayerState {
 
   // UI
   isVisualizerOpen: boolean;
+  isNowPlayingOpen: boolean;
 
   // Actions - Library
   addSongs: (files: File[]) => Promise<void>;
   removeSong: (id: string) => void;
   setSearchQuery: (query: string) => void;
   loadFromDB: () => Promise<void>;
+
+  // Actions - Covers
+  searchCover: (id: string, force?: boolean) => Promise<boolean>;
+  applyCover: (id: string, cover: Blob) => Promise<void>;
+  backfillCovers: () => Promise<void>;
 
   // Actions - Playlists
   createPlaylist: (name: string) => Promise<void>;
@@ -74,4 +82,6 @@ export interface PlayerState {
 
   // Actions - UI
   toggleVisualizer: () => void;
+  toggleNowPlaying: () => void;
+  closeNowPlaying: () => void;
 }

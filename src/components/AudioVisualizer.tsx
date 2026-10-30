@@ -1,36 +1,12 @@
 "use client";
 
-import { useRef, useEffect, useCallback } from "react";
-import { useAudioStore } from "@/lib/audioStore";
+import { useRef, useEffect } from "react";
+import { getAnalyser, resumeAudio } from "@/lib/audioAnalyser";
 
 export default function AudioVisualizer() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
-  const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
-  const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
-  const isPlaying = useAudioStore((s) => s.isPlaying);
-
-  const setupAudioContext = useCallback(() => {
-    if (audioContextRef.current && analyserRef.current) return;
-
-    const audioContext = new AudioContext();
-    const analyser = audioContext.createAnalyser();
-    analyser.fftSize = 256;
-    analyser.smoothingTimeConstant = 0.8;
-
-    // Get the audio element from the store
-    const audioEl = document.querySelector("audio");
-    if (!audioEl) return;
-
-    const source = audioContext.createMediaElementSource(audioEl);
-    source.connect(analyser);
-    analyser.connect(audioContext.destination);
-
-    audioContextRef.current = audioContext;
-    analyserRef.current = analyser;
-    sourceRef.current = source;
-  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -39,10 +15,32 @@ export default function AudioVisualizer() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    // Shared analyser graph; created once per page (module-level singleton).
+    analyserRef.current = getAnalyser();
+    resumeAudio();
+
+    // Hoisted out of the draw loop: getComputedStyle forces a style recalc.
+    let accent = "#d4d4d8";
+    let frame = 0;
+
+    // Hoisted out of the draw loop: allocating per frame means 60 arrays/sec.
+    let dataArray: Uint8Array<ArrayBuffer> | null = null;
+    let dataArrayLength = 0;
+
     const draw = () => {
       animationRef.current = requestAnimationFrame(draw);
 
-      if (!analyserRef.current) {
+      // The accent lives in CSS; canvas needs a concrete color.
+      if (frame % 30 === 0) {
+        accent =
+          getComputedStyle(document.documentElement)
+            .getPropertyValue("--accent")
+            .trim() || "#d4d4d8";
+      }
+      frame++;
+
+      const analyser = analyserRef.current;
+      if (!analyser) {
         // Draw idle state
         const width = canvas.width;
         const height = canvas.height;
@@ -50,22 +48,25 @@ export default function AudioVisualizer() {
 
         const barCount = 32;
         const barWidth = width / barCount - 2;
+        ctx.fillStyle = accent;
         for (let i = 0; i < barCount; i++) {
           const barHeight = 4 + Math.sin(Date.now() / 800 + i * 0.3) * 3;
           const x = i * (barWidth + 2);
-          const gradient = ctx.createLinearGradient(0, height, 0, height - barHeight);
-          gradient.addColorStop(0, "rgba(139, 92, 246, 0.3)");
-          gradient.addColorStop(1, "rgba(236, 72, 153, 0.3)");
-          ctx.fillStyle = gradient;
+          ctx.globalAlpha = 0.4 * (1 - (i / barCount) * 0.6);
           ctx.fillRect(x, height - barHeight, barWidth, barHeight);
         }
+        ctx.globalAlpha = 1;
         return;
       }
 
-      const analyser = analyserRef.current;
       const bufferLength = analyser.frequencyBinCount;
-      const dataArray = new Uint8Array(bufferLength);
-      analyser.getByteFrequencyData(dataArray);
+      let data = dataArray;
+      if (!data || dataArrayLength !== bufferLength) {
+        data = new Uint8Array(bufferLength);
+        dataArray = data;
+        dataArrayLength = bufferLength;
+      }
+      analyser.getByteFrequencyData(data);
 
       const width = canvas.width;
       const height = canvas.height;
@@ -75,21 +76,19 @@ export default function AudioVisualizer() {
       const barWidth = width / barCount - 2;
       const step = Math.floor(bufferLength / barCount);
 
+      ctx.fillStyle = accent;
       for (let i = 0; i < barCount; i++) {
-        const value = dataArray[i * step];
+        const value = data[i * step];
         const barHeight = (value / 255) * height * 0.85;
         const x = i * (barWidth + 2);
 
-        const gradient = ctx.createLinearGradient(0, height, 0, height - barHeight);
-        gradient.addColorStop(0, "#8b5cf6");
-        gradient.addColorStop(0.5, "#a855f7");
-        gradient.addColorStop(1, "#ec4899");
+        ctx.globalAlpha = 1 - (i / barCount) * 0.65;
 
-        ctx.fillStyle = gradient;
         ctx.beginPath();
         ctx.roundRect(x, height - barHeight, barWidth, barHeight, 3);
         ctx.fill();
       }
+      ctx.globalAlpha = 1;
     };
 
     draw();
@@ -98,13 +97,6 @@ export default function AudioVisualizer() {
       cancelAnimationFrame(animationRef.current);
     };
   }, []);
-
-  // Setup audio context on first play
-  useEffect(() => {
-    if (isPlaying) {
-      setupAudioContext();
-    }
-  }, [isPlaying, setupAudioContext]);
 
   return (
     <div className="w-full">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useAudioStore } from "@/lib/audioStore";
+import SearchBar from "./SearchBar";
 
 interface TopBarProps {
   currentView: string;
@@ -8,26 +8,28 @@ interface TopBarProps {
 }
 
 export default function TopBar({ currentView, onViewChange }: TopBarProps) {
-  const searchQuery = useAudioStore((s) => s.searchQuery);
-  const setSearchQuery = useAudioStore((s) => s.setSearchQuery);
-
   const tabs = [
     { id: "inicio", label: "INICIO" },
     { id: "biblioteca", label: "BIBLIOTECA" },
   ];
 
+  const openFilePicker = () => {
+    document.querySelector<HTMLInputElement>('input[type="file"]')?.click();
+  };
+
   return (
-    <header className="flex items-center gap-4 px-6 py-4 border-b border-accent-violet/10 bg-bg-primary/50 glass sticky top-0 z-40">
+    <header className="flex h-16 flex-none items-center gap-3 border-b border-white/[.07] bg-bg-secondary px-4 md:px-6">
       {/* Tabs */}
-      <nav className="hidden sm:flex items-center gap-1">
+      <nav className="hidden items-center gap-1 sm:flex" aria-label="Vistas">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => onViewChange(tab.id)}
-            className={`px-4 py-2 rounded-lg text-sm font-semibold tracking-wide transition-all ${
+            aria-current={currentView === tab.id ? "page" : undefined}
+            className={`rounded-lg px-2.5 py-1.5 text-[12px] font-medium tracking-[.06em] transition-[color,background-color] duration-150 ease-[cubic-bezier(.22,1,.36,1)] active:scale-[.99] ${
               currentView === tab.id
-                ? "text-accent-violet bg-accent-violet/10"
-                : "text-text-muted hover:text-text-secondary hover:bg-white/5"
+                ? "bg-white/[.06] text-text-primary"
+                : "text-text-muted hover:bg-white/[.045] hover:text-text-primary"
             }`}
           >
             {tab.label}
@@ -36,39 +38,30 @@ export default function TopBar({ currentView, onViewChange }: TopBarProps) {
       </nav>
 
       {/* Search */}
-      <div className="flex-1 max-w-md ml-auto">
-        <div className="relative">
+      <div className="min-w-0 max-w-[380px] flex-1">
+        <SearchBar />
+      </div>
+
+      {/* Import — the primary visual entry point for adding music */}
+      <div className="ml-auto flex flex-none items-center">
+        <button
+          type="button"
+          onClick={openFilePicker}
+          className="inline-flex h-9 flex-none items-center gap-[7px] whitespace-nowrap rounded-xl border border-white/[.13] px-3.5 text-[13px] font-medium text-text-primary transition-[background-color,border-color] duration-150 ease-[cubic-bezier(.22,1,.36,1)] hover:border-white/[.2] hover:bg-white/[.06] active:scale-[.99]"
+        >
           <svg
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted"
+            className="h-3.5 w-3.5"
             fill="none"
             stroke="currentColor"
+            strokeWidth={1.7}
+            strokeLinecap="round"
             viewBox="0 0 24 24"
+            aria-hidden="true"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
+            <path d="M12 5v14M5 12h14" />
           </svg>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Buscar"
-            className="w-full pl-10 pr-4 py-2.5 purple-glass rounded-xl text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-accent-violet/40 transition-all"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          )}
-        </div>
+          <span className="hidden sm:inline">Importar</span>
+        </button>
       </div>
     </header>
   );

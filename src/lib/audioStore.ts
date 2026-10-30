@@ -5,16 +5,12 @@ import { persist } from "zustand/middleware";
 import type { Song, Playlist, PlaybackMode, PlayerState } from "./types";
 import { parseAudioTags } from "./parseTags";
 import { saveSongs, getAllSongs, deleteSong, savePlaylist, getAllPlaylists, deletePlaylist as deletePlaylistDB, type StoredSong } from "./db";
+import { getAudioElement } from "./audioElement";
+import { resumeAudio } from "./audioAnalyser";
+import { downloadCover, findCover } from "./coverSearch";
 
-let audioRef: HTMLAudioElement | null = null;
-
-function getAudio(): HTMLAudioElement {
-  if (!audioRef) {
-    audioRef = new Audio();
-    audioRef.preload = "metadata";
-  }
-  return audioRef;
-}
+/** Guards against two concurrent backfills (StrictMode mounts, double import). */
+let backfillRunning = false;
 
 function generateId(file: File): string {
   return `${file.name}-${file.size}-${file.lastModified}`;
@@ -39,6 +35,7 @@ async function fileToStored(file: File, tags: { title: string; artist: string; a
     liked,
     coverUrl: null, // will be reconstructed from coverBlob
     coverBlob,
+    coverSearchTried: false,
     fileBlob,
     fileName: file.name,
     fileType: file.type,
@@ -64,6 +61,7 @@ function storedToSong(stored: StoredSong): Song {
     album: stored.album,
     duration: stored.duration,
     coverUrl,
+    coverSearchTried: stored.coverSearchTried ?? false,
     liked: stored.liked,
   };
 }
@@ -93,6 +91,7 @@ export const useAudioStore = create<PlayerState>()(
 
       // UI
       isVisualizerOpen: false,
+      isNowPlayingOpen: false,
 
       // --- Library Actions ---
       addSongs: async (files: File[]) => {
@@ -129,6 +128,7 @@ export const useAudioStore = create<PlayerState>()(
             album: tags.album,
             duration,
             coverUrl: tags.coverUrl,
+            coverSearchTried: false,
             liked: false,
           };
 
@@ -161,6 +161,10 @@ export const useAudioStore = create<PlayerState>()(
               : updatedSongs,
           };
         });
+
+        // Covers arrive in the background: the import must not block for
+        // ~3s per song on a rate-limited API.
+        void get().backfillCovers();
       },
 
       removeSong: async (id: string) => {
@@ -184,7 +188,7 @@ export const useAudioStore = create<PlayerState>()(
             state.currentSong?.id === id ? null : state.currentSong;
 
           if (state.currentSong?.id === id) {
-            const audio = getAudio();
+            const audio = getAudioElement();
             audio.pause();
             audio.src = "";
           }
@@ -218,6 +222,10 @@ export const useAudioStore = create<PlayerState>()(
 
             return updates;
           });
+
+          // Songs saved before cover lookup existed have no cover and no
+          // flag, so they get picked up here on the next app start.
+          void get().backfillCovers();
         } catch (e) {
           console.error("Failed to load from IndexedDB:", e);
         }
@@ -312,7 +320,8 @@ export const useAudioStore = create<PlayerState>()(
 
       // --- Playback Actions ---
       play: (song?: Song) => {
-        const audio = getAudio();
+        const audio = getAudioElement();
+        resumeAudio();
         const state = get();
 
         if (song) {
@@ -338,7 +347,7 @@ export const useAudioStore = create<PlayerState>()(
       },
 
       pause: () => {
-        getAudio().pause();
+        getAudioElement().pause();
         set({ isPlaying: false });
       },
 
@@ -374,7 +383,7 @@ export const useAudioStore = create<PlayerState>()(
 
         const nextSong = state.queue[nextIndex];
         if (nextSong) {
-          const audio = getAudio();
+          const audio = getAudioElement();
           audio.src = nextSong.url;
           audio.play().catch(() => {});
           set({
@@ -391,7 +400,7 @@ export const useAudioStore = create<PlayerState>()(
         const state = get();
         if (state.queue.length === 0) return;
 
-        const audio = getAudio();
+        const audio = getAudioElement();
         if (audio.currentTime > 3) {
           audio.currentTime = 0;
           set({ currentTime: 0, progress: 0 });
@@ -418,12 +427,13 @@ export const useAudioStore = create<PlayerState>()(
       },
 
       seek: (time: number) => {
-        const audio = getAudio();
+        const audio = getAudioElement();
         audio.currentTime = time;
-        set({ currentTime: time });
+        set({ currentTime: time, progress: time });
       },
 
-      setProgress: (progress: number) => set({ progress }),
+      // The UI reads currentTime; progress is kept in sync for compatibility.
+      setProgress: (time: number) => set({ currentTime: time, progress: time }),
       setDuration: (duration: number) => {
         set((state) => ({
           currentSong: state.currentSong
@@ -433,14 +443,14 @@ export const useAudioStore = create<PlayerState>()(
       },
 
       setVolume: (volume: number) => {
-        const audio = getAudio();
+        const audio = getAudioElement();
         audio.volume = volume;
         set({ volume, isMuted: volume === 0 });
       },
 
       toggleMute: () => {
         const state = get();
-        const audio = getAudio();
+        const audio = getAudioElement();
         const newMuted = !state.isMuted;
         audio.muted = newMuted;
         set({ isMuted: newMuted });
@@ -478,8 +488,107 @@ export const useAudioStore = create<PlayerState>()(
         }
       },
 
+      // --- Covers ---
+      applyCover: async (id: string, cover: Blob) => {
+        const previous = get().songs.find((s) => s.id === id)?.coverUrl ?? null;
+        const coverUrl = URL.createObjectURL(cover);
+
+        set((state) => ({
+          songs: state.songs.map((s) =>
+            s.id === id ? { ...s, coverUrl, coverSearchTried: true } : s
+          ),
+          currentSong:
+            state.currentSong?.id === id
+              ? { ...state.currentSong, coverUrl, coverSearchTried: true }
+              : state.currentSong,
+          queue: state.queue.map((q) =>
+            q.id === id ? { ...q, coverUrl, coverSearchTried: true } : q
+          ),
+        }));
+
+        // The replaced cover was an object URL too; leaving it alive leaks
+        // the blob for the lifetime of the tab.
+        if (previous?.startsWith("blob:")) URL.revokeObjectURL(previous);
+
+        try {
+          const allStored = await getAllSongs();
+          const target = allStored.find((s) => s.id === id);
+          if (target) {
+            target.coverBlob = cover;
+            target.coverSearchTried = true;
+            target.coverUrl = null;
+            await saveSongs([target]);
+          }
+        } catch (e) {
+          console.error("Failed to persist cover in IndexedDB:", e);
+        }
+      },
+
+      searchCover: async (id: string, force = false) => {
+        const song = get().songs.find((s) => s.id === id);
+        if (!song) return false;
+        if (song.coverUrl && !force) return true;
+
+        try {
+          const match = await findCover(song.file.name);
+
+          if (!match) {
+            // A definitive "not in the catalogue". Remember it so every
+            // reload does not pay for the same empty answer.
+            set((state) => ({
+              songs: state.songs.map((s) =>
+                s.id === id ? { ...s, coverSearchTried: true } : s
+              ),
+              currentSong:
+                state.currentSong?.id === id
+                  ? { ...state.currentSong, coverSearchTried: true }
+                  : state.currentSong,
+              queue: state.queue.map((q) =>
+                q.id === id ? { ...q, coverSearchTried: true } : q
+              ),
+            }));
+
+            const allStored = await getAllSongs();
+            const target = allStored.find((s) => s.id === id);
+            if (target) {
+              target.coverSearchTried = true;
+              await saveSongs([target]);
+            }
+            return false;
+          }
+
+          await get().applyCover(id, await downloadCover(match.artworkUrl));
+          return true;
+        } catch (e) {
+          // Network or rate-limit failure. Deliberately do NOT set the flag:
+          // a later session should retry instead of burying the song forever.
+          console.error("Cover search failed for", song.file.name, e);
+          return false;
+        }
+      },
+
+      backfillCovers: async () => {
+        if (backfillRunning) return;
+        backfillRunning = true;
+
+        try {
+          const pending = get().songs.filter(
+            (s) => !s.coverUrl && !s.coverSearchTried
+          );
+          for (const song of pending) {
+            // searchCover goes through the shared throttle, so awaiting here
+            // keeps the loop honest about how long the backfill takes.
+            await get().searchCover(song.id);
+          }
+        } finally {
+          backfillRunning = false;
+        }
+      },
+
       // --- UI ---
       toggleVisualizer: () => set((state) => ({ isVisualizerOpen: !state.isVisualizerOpen })),
+      toggleNowPlaying: () => set((state) => ({ isNowPlayingOpen: !state.isNowPlayingOpen })),
+      closeNowPlaying: () => set({ isNowPlayingOpen: false }),
     }),
     {
       name: "mi-musica-storage",

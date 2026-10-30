@@ -1,13 +1,69 @@
 "use client";
 
 import { useAudioStore } from "@/lib/audioStore";
-import { useMemo } from "react";
+import { placeholderTint } from "@/lib/accent";
+import type { Song } from "@/lib/types";
+import { useMemo, type ReactNode } from "react";
 
 interface BibliotecaViewProps {
   subView: string;
   onSubViewChange: (view: string) => void;
   selectedPlaylistId?: string | null;
 }
+
+/** Placeholder art: one deterministic tint per seed, never a shared gradient. */
+function tint(seed: string) {
+  return { background: placeholderTint(seed) };
+}
+
+function formatTime(seconds: number): string {
+  if (!seconds || isNaN(seconds)) return "0:00";
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
+}
+
+const iconProps = {
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 1.7,
+  strokeLinecap: "round" as const,
+  strokeLinejoin: "round" as const,
+  viewBox: "0 0 24 24",
+  "aria-hidden": true,
+};
+
+const ICONS: Record<string, ReactNode> = {
+  all: (
+    <svg className="h-[15px] w-[15px] flex-none" {...iconProps}>
+      <path d="M9 18V5l11-2v13" />
+      <circle cx="6" cy="18" r="3" />
+      <circle cx="17" cy="16" r="3" />
+    </svg>
+  ),
+  favorites: (
+    <svg className="h-[15px] w-[15px] flex-none" {...iconProps}>
+      <path d="M12 20s-7-4.3-7-9.2A4.1 4.1 0 0 1 12 8a4.1 4.1 0 0 1 7 2.8C19 15.7 12 20 12 20z" />
+    </svg>
+  ),
+  artists: (
+    <svg className="h-[15px] w-[15px] flex-none" {...iconProps}>
+      <circle cx="12" cy="8" r="3.5" />
+      <path d="M5 20c0-3.3 3.1-5.5 7-5.5s7 2.2 7 5.5" />
+    </svg>
+  ),
+  albums: (
+    <svg className="h-[15px] w-[15px] flex-none" {...iconProps}>
+      <circle cx="12" cy="12" r="8.5" />
+      <circle cx="12" cy="12" r="2" />
+    </svg>
+  ),
+  playlist: (
+    <svg className="h-[15px] w-[15px] flex-none" {...iconProps}>
+      <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+    </svg>
+  ),
+};
 
 export default function BibliotecaView({ subView, onSubViewChange, selectedPlaylistId }: BibliotecaViewProps) {
   const songs = useAudioStore((s) => s.songs);
@@ -74,29 +130,35 @@ export default function BibliotecaView({ subView, onSubViewChange, selectedPlayl
   }, [songs]);
 
   const sidebarItems = [
-    { id: "all", label: "Todas mis canciones", icon: "🎵" },
-    { id: "favorites", label: "Favoritos", icon: "❤️" },
-    { id: "artists", label: "Artistas", icon: "👤" },
-    { id: "albums", label: "Álbumes", icon: "💿" },
-    ...playlists.map((p) => ({ id: `playlist-${p.id}`, label: p.name, icon: "📁" })),
+    { id: "all", label: "Todas mis canciones", icon: ICONS.all },
+    { id: "favorites", label: "Favoritos", icon: ICONS.favorites },
+    { id: "artists", label: "Artistas", icon: ICONS.artists },
+    { id: "albums", label: "Álbumes", icon: ICONS.albums },
+    ...playlists.map((p) => ({ id: `playlist-${p.id}`, label: p.name, icon: ICONS.playlist })),
   ];
 
   // If viewing a specific playlist
   if (selectedPlaylist) {
     return (
       <div>
-        <div className="flex items-center gap-4 mb-6">
+        <div className="mb-6 flex items-center gap-3">
           <button
             onClick={() => onSubViewChange("all")}
-            className="p-2 rounded-lg hover:bg-white/5 text-text-secondary hover:text-text-primary transition-colors"
+            aria-label="Volver"
+            className="grid h-8 w-8 place-items-center rounded-lg text-text-secondary transition-[color,background-color] duration-150 ease-[cubic-bezier(.22,1,.36,1)] hover:bg-white/[.045] hover:text-text-primary active:scale-95"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            <svg className="h-4 w-4" {...iconProps}>
+              <path d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <div className="flex-1">
-            <h2 className="text-2xl font-bold text-text-primary">{selectedPlaylist.name}</h2>
-            <p className="text-sm text-text-secondary">{playlistSongs.length} canciones</p>
+          <div className="min-w-0 flex-1">
+            <h2 className="truncate text-[clamp(22px,3vw,28px)] font-semibold tracking-[-.03em] text-text-primary">
+              {selectedPlaylist.name}
+            </h2>
+            <p className="mt-1 text-[12px] text-text-muted">
+              <span className="font-mono">{playlistSongs.length}</span>{" "}
+              {playlistSongs.length === 1 ? "canción" : "canciones"}
+            </p>
           </div>
           <button
             onClick={() => {
@@ -105,73 +167,31 @@ export default function BibliotecaView({ subView, onSubViewChange, selectedPlayl
                 onSubViewChange("all");
               }
             }}
-            className="p-2 rounded-lg hover:bg-red-500/10 text-text-muted hover:text-red-400 transition-colors"
+            aria-label="Eliminar álbum"
+            className="grid h-8 w-8 place-items-center rounded-lg text-text-muted transition-[color,background-color] duration-150 ease-[cubic-bezier(.22,1,.36,1)] hover:bg-white/[.045] hover:text-red-400 active:scale-95"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            <svg className="h-4 w-4" {...iconProps}>
+              <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
           </button>
         </div>
 
         {playlistSongs.length === 0 ? (
-          <p className="text-sm text-text-secondary py-10 text-center">
+          <p className="py-10 text-center text-[13px] text-text-muted">
             Este álbum está vacío. Agregá canciones desde la lista principal.
           </p>
         ) : (
-          <div className="space-y-0.5">
+          <div className="border-t border-white/[.07]">
             {playlistSongs.map((song, index) => (
-              <div
+              <LibraryRow
                 key={song.id}
-                onClick={() => play(song)}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all group ${
-                  currentSong?.id === song.id ? "bg-accent-violet/10" : "hover:bg-white/[0.04]"
-                }`}
-              >
-                <span className="w-6 text-center text-xs text-text-muted">
-                  {currentSong?.id === song.id && isPlaying ? (
-                    <div className="flex items-end justify-center gap-[2px] h-3">
-                      {[0.6, 1, 0.4].map((h, i) => (
-                        <div
-                          key={i}
-                          className="w-[2px] bg-accent-violet rounded-full animate-pulse"
-                          style={{ height: `${h * 12}px`, animationDelay: `${i * 0.15}s` }}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    index + 1
-                  )}
-                </span>
-                <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
-                  {song.coverUrl ? (
-                    <img src={song.coverUrl} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-accent-violet to-accent-pink flex items-center justify-center">
-                      <svg className="w-4 h-4 text-white/70" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
-                      </svg>
-                    </div>
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className={`text-sm font-medium truncate ${currentSong?.id === song.id ? "text-accent-violet" : "text-text-primary"}`}>
-                    {song.title}
-                  </p>
-                  <p className="text-xs text-text-secondary truncate">{song.artist}</p>
-                </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    removeFromPlaylist(selectedPlaylist.id, song.id);
-                  }}
-                  className="p-1.5 rounded-lg text-text-muted opacity-0 group-hover:opacity-100 hover:text-red-400 transition-all"
-                  title="Quitar del álbum"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
+                song={song}
+                index={index}
+                isActive={currentSong?.id === song.id}
+                isPlaying={isPlaying}
+                onPlay={() => play(song)}
+                onRemove={() => removeFromPlaylist(selectedPlaylist.id, song.id)}
+              />
             ))}
           </div>
         )}
@@ -182,20 +202,23 @@ export default function BibliotecaView({ subView, onSubViewChange, selectedPlayl
   return (
     <div className="flex gap-6">
       {/* Sub-sidebar for library sections */}
-      <div className="hidden lg:flex flex-col w-52 flex-shrink-0">
-        <h2 className="text-xl font-bold text-text-primary mb-4">BIBLIOTECA</h2>
-        <nav className="flex flex-col gap-0.5">
+      <div className="hidden w-[200px] flex-shrink-0 flex-col lg:flex">
+        <p className="mb-3 px-2.5 text-[10.5px] font-medium uppercase tracking-[.09em] text-text-muted">
+          Biblioteca
+        </p>
+        <nav className="flex flex-col gap-px" aria-label="Secciones de la biblioteca">
           {sidebarItems.map((item) => (
             <button
               key={item.id}
               onClick={() => onSubViewChange(item.id)}
-              className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all text-left ${
+              aria-current={subView === item.id ? "page" : undefined}
+              className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13.5px] transition-[color,background-color] duration-150 ease-[cubic-bezier(.22,1,.36,1)] active:scale-[.99] ${
                 subView === item.id
-                  ? "bg-white/5 text-text-primary font-medium"
-                  : "text-text-secondary hover:text-text-primary hover:bg-white/[0.03]"
+                  ? "bg-white/[.06] text-text-primary"
+                  : "text-text-secondary hover:bg-white/[.045] hover:text-text-primary"
               }`}
             >
-              <span className="text-base">{item.icon}</span>
+              <span className={subView === item.id ? "opacity-100" : "opacity-75"}>{item.icon}</span>
               <span className="truncate">{item.label}</span>
             </button>
           ))}
@@ -203,17 +226,18 @@ export default function BibliotecaView({ subView, onSubViewChange, selectedPlayl
       </div>
 
       {/* Content area */}
-      <div className="flex-1 min-w-0">
+      <div className="min-w-0 flex-1">
         {/* Mobile tabs */}
-        <div className="flex lg:hidden gap-1 mb-4 overflow-x-auto">
+        <div className="scrollbar-hide mb-5 flex gap-5 overflow-x-auto border-b border-white/[.07] lg:hidden">
           {sidebarItems.map((item) => (
             <button
               key={item.id}
               onClick={() => onSubViewChange(item.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
+              aria-current={subView === item.id ? "page" : undefined}
+              className={`relative -mb-px flex-none whitespace-nowrap pb-2 text-[13px] transition-colors duration-150 ease-[cubic-bezier(.22,1,.36,1)] after:absolute after:inset-x-0 after:bottom-0 after:h-[2px] after:rounded-full ${
                 subView === item.id
-                  ? "bg-white/5 text-text-primary"
-                  : "text-text-muted"
+                  ? "text-text-primary after:bg-accent"
+                  : "text-text-muted after:bg-transparent hover:text-text-secondary"
               }`}
             >
               {item.label}
@@ -224,61 +248,33 @@ export default function BibliotecaView({ subView, onSubViewChange, selectedPlayl
         {/* All songs view */}
         {(subView === "all" || subView === "favorites") && (
           <div>
-            <h3 className="text-lg font-bold text-text-primary mb-4">
-              {subView === "favorites" ? "Favoritos" : "Todas mis canciones"}
-            </h3>
+            <div className="mb-3.5 flex items-baseline gap-2.5">
+              <h3 className="text-[15px] font-semibold tracking-[-.015em] text-text-primary">
+                {subView === "favorites" ? "Favoritos" : "Todas mis canciones"}
+              </h3>
+              <span className="font-mono text-[11px] text-text-muted">
+                {subView === "favorites" ? favorites.length : filteredSongs.length}
+              </span>
+            </div>
             {subView === "favorites" && favorites.length === 0 ? (
-              <p className="text-sm text-text-secondary py-10 text-center">
+              <p className="py-10 text-center text-[13px] text-text-muted">
                 No tenés canciones favoritas aún
               </p>
             ) : subView === "all" && filteredSongs.length === 0 ? (
-              <p className="text-sm text-text-secondary py-10 text-center">
+              <p className="py-10 text-center text-[13px] text-text-muted">
                 {searchQuery ? `No se encontraron resultados para "${searchQuery}"` : "No hay canciones"}
               </p>
             ) : (
-              <div className="space-y-0.5">
+              <div className="border-t border-white/[.07]">
                 {(subView === "favorites" ? favorites : filteredSongs).map((song, index) => (
-                  <div
+                  <LibraryRow
                     key={song.id}
-                    onClick={() => play(song)}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all group ${
-                      currentSong?.id === song.id ? "bg-accent-violet/10" : "hover:bg-white/[0.04]"
-                    }`}
-                  >
-                    <span className="w-6 text-center text-xs text-text-muted">
-                      {currentSong?.id === song.id && isPlaying ? (
-                        <div className="flex items-end justify-center gap-[2px] h-3">
-                          {[0.6, 1, 0.4].map((h, i) => (
-                            <div
-                              key={i}
-                              className="w-[2px] bg-accent-violet rounded-full animate-pulse"
-                              style={{ height: `${h * 12}px`, animationDelay: `${i * 0.15}s` }}
-                            />
-                          ))}
-                        </div>
-                      ) : (
-                        index + 1
-                      )}
-                    </span>
-                    <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
-                      {song.coverUrl ? (
-                        <img src={song.coverUrl} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-accent-violet to-accent-pink flex items-center justify-center">
-                          <svg className="w-4 h-4 text-white/70" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
-                          </svg>
-                        </div>
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className={`text-sm font-medium truncate ${currentSong?.id === song.id ? "text-accent-violet" : "text-text-primary"}`}>
-                        {song.title}
-                      </p>
-                      <p className="text-xs text-text-secondary truncate">{song.artist}</p>
-                    </div>
-                    <span className="text-xs text-text-muted hidden sm:block">{song.album}</span>
-                  </div>
+                    song={song}
+                    index={index}
+                    isActive={currentSong?.id === song.id}
+                    isPlaying={isPlaying}
+                    onPlay={() => play(song)}
+                  />
                 ))}
               </div>
             )}
@@ -288,31 +284,37 @@ export default function BibliotecaView({ subView, onSubViewChange, selectedPlayl
         {/* Artists view */}
         {subView === "artists" && (
           <div>
-            <h3 className="text-lg font-bold text-text-primary mb-4">Artistas</h3>
+            <div className="mb-3.5 flex items-baseline gap-2.5">
+              <h3 className="text-[15px] font-semibold tracking-[-.015em] text-text-primary">Artistas</h3>
+              <span className="font-mono text-[11px] text-text-muted">{artists.length}</span>
+            </div>
             {artists.length === 0 ? (
-              <p className="text-sm text-text-secondary py-10 text-center">No hay artistas</p>
+              <p className="py-10 text-center text-[13px] text-text-muted">No hay artistas</p>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                 {artists.map((artist) => (
                   <button
                     key={artist.name}
                     onClick={() => play(artist.songs[0])}
-                    className="flex flex-col items-center gap-3 group"
+                    className="group flex flex-col items-center gap-3 text-center"
                   >
-                    <div className="w-full aspect-square rounded-full overflow-hidden shadow-lg shadow-violet-950/40 bg-bg-card">
+                    <div className="relative aspect-square w-full overflow-hidden rounded-full bg-bg-card after:absolute after:inset-0 after:rounded-full after:shadow-[inset_0_0_0_1px_rgba(255,255,255,.06)]">
                       {artist.cover ? (
-                        <img src={artist.cover} alt="" className="w-full h-full object-cover" />
+                        <img src={artist.cover} alt="" className="h-full w-full object-cover saturate-[.9]" />
                       ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-accent-violet/40 to-accent-pink/40 flex items-center justify-center">
-                          <svg className="w-12 h-12 text-white/40" fill="currentColor" viewBox="0 0 24 24">
+                        <div className="grid h-full w-full place-items-center text-text-secondary" style={tint(artist.name)}>
+                          <svg className="h-9 w-9" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                           </svg>
                         </div>
                       )}
                     </div>
-                    <div className="text-center">
-                      <p className="text-sm font-medium text-text-primary truncate max-w-[120px]">{artist.name}</p>
-                      <p className="text-xs text-text-secondary">{artist.songs.length} {artist.songs.length === 1 ? "canción" : "canciones"}</p>
+                    <div className="min-w-0">
+                      <p className="truncate text-[13px] font-medium text-text-primary">{artist.name}</p>
+                      <p className="text-[11.5px] text-text-muted">
+                        <span className="font-mono">{artist.songs.length}</span>{" "}
+                        {artist.songs.length === 1 ? "canción" : "canciones"}
+                      </p>
                     </div>
                   </button>
                 ))}
@@ -324,31 +326,37 @@ export default function BibliotecaView({ subView, onSubViewChange, selectedPlayl
         {/* Albums view */}
         {subView === "albums" && (
           <div>
-            <h3 className="text-lg font-bold text-text-primary mb-4">Álbumes</h3>
+            <div className="mb-3.5 flex items-baseline gap-2.5">
+              <h3 className="text-[15px] font-semibold tracking-[-.015em] text-text-primary">Álbumes</h3>
+              <span className="font-mono text-[11px] text-text-muted">{albums.length}</span>
+            </div>
             {albums.length === 0 ? (
-              <p className="text-sm text-text-secondary py-10 text-center">No hay álbumes</p>
+              <p className="py-10 text-center text-[13px] text-text-muted">No hay álbumes</p>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                 {albums.map((album) => (
                   <button
                     key={album.name}
                     onClick={() => play(album.songs[0])}
-                    className="flex flex-col items-center gap-3 group"
+                    className="group flex flex-col gap-2.5 text-left"
                   >
-                    <div className="w-full aspect-square rounded-xl overflow-hidden shadow-lg shadow-violet-950/40">
+                    <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-bg-card transition-transform duration-[250ms] ease-[cubic-bezier(.22,1,.36,1)] after:absolute after:inset-0 after:rounded-xl after:shadow-[inset_0_0_0_1px_rgba(255,255,255,.06)] group-hover:-translate-y-[3px]">
                       {album.cover ? (
-                        <img src={album.cover} alt="" className="w-full h-full object-cover" />
+                        <img src={album.cover} alt="" className="h-full w-full object-cover saturate-[.9]" />
                       ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-accent-violet to-accent-pink flex items-center justify-center">
-                          <svg className="w-12 h-12 text-white/50" fill="currentColor" viewBox="0 0 24 24">
+                        <div className="grid h-full w-full place-items-center text-text-secondary" style={tint(album.name)}>
+                          <svg className="h-9 w-9" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
                           </svg>
                         </div>
                       )}
                     </div>
-                    <div className="text-center">
-                      <p className="text-sm font-medium text-text-primary truncate max-w-[140px]">{album.name}</p>
-                      <p className="text-xs text-text-secondary">{album.songs.length} {album.songs.length === 1 ? "canción" : "canciones"}</p>
+                    <div className="min-w-0">
+                      <p className="truncate text-[13px] font-medium text-text-primary">{album.name}</p>
+                      <p className="text-[11.5px] text-text-muted">
+                        <span className="font-mono">{album.songs.length}</span>{" "}
+                        {album.songs.length === 1 ? "canción" : "canciones"}
+                      </p>
                     </div>
                   </button>
                 ))}
@@ -362,52 +370,29 @@ export default function BibliotecaView({ subView, onSubViewChange, selectedPlayl
           <div>
             {playlists.filter((p) => `playlist-${p.id}` === subView).map((playlist) => (
               <div key={playlist.id}>
-                <h3 className="text-lg font-bold text-text-primary mb-4">{playlist.name}</h3>
+                <div className="mb-3.5 flex items-baseline gap-2.5">
+                  <h3 className="text-[15px] font-semibold tracking-[-.015em] text-text-primary">
+                    {playlist.name}
+                  </h3>
+                  <span className="font-mono text-[11px] text-text-muted">{playlist.songIds.length}</span>
+                </div>
                 {playlist.songIds.length === 0 ? (
-                  <p className="text-sm text-text-secondary py-10 text-center">Este álbum está vacío</p>
+                  <p className="py-10 text-center text-[13px] text-text-muted">Este álbum está vacío</p>
                 ) : (
-                  <div className="space-y-0.5">
+                  <div className="border-t border-white/[.07]">
                     {playlist.songIds.map((songId, index) => {
                       const song = songs.find((s) => s.id === songId);
                       if (!song) return null;
                       return (
-                        <div
+                        <LibraryRow
                           key={song.id}
-                          onClick={() => play(song)}
-                          className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all group ${
-                            currentSong?.id === song.id ? "bg-accent-violet/10" : "hover:bg-white/[0.04]"
-                          }`}
-                        >
-                          <span className="w-6 text-center text-xs text-text-muted">{index + 1}</span>
-                          <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
-                            {song.coverUrl ? (
-                              <img src={song.coverUrl} alt="" className="w-full h-full object-cover" />
-                            ) : (
-                              <div className="w-full h-full bg-gradient-to-br from-accent-violet to-accent-pink flex items-center justify-center">
-                                <svg className="w-4 h-4 text-white/70" fill="currentColor" viewBox="0 0 24 24">
-                                  <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
-                                </svg>
-                              </div>
-                            )}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className={`text-sm font-medium truncate ${currentSong?.id === song.id ? "text-accent-violet" : "text-text-primary"}`}>
-                              {song.title}
-                            </p>
-                            <p className="text-xs text-text-secondary truncate">{song.artist}</p>
-                          </div>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              removeFromPlaylist(playlist.id, song.id);
-                            }}
-                            className="p-1.5 rounded-lg text-text-muted opacity-0 group-hover:opacity-100 hover:text-red-400 transition-all"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          </button>
-                        </div>
+                          song={song}
+                          index={index}
+                          isActive={currentSong?.id === song.id}
+                          isPlaying={isPlaying}
+                          onPlay={() => play(song)}
+                          onRemove={() => removeFromPlaylist(playlist.id, song.id)}
+                        />
                       );
                     })}
                   </div>
@@ -417,6 +402,87 @@ export default function BibliotecaView({ subView, onSubViewChange, selectedPlayl
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function LibraryRow({
+  song,
+  index,
+  isActive,
+  isPlaying,
+  onPlay,
+  onRemove,
+}: {
+  song: Song;
+  index: number;
+  isActive: boolean;
+  isPlaying: boolean;
+  onPlay: () => void;
+  onRemove?: () => void;
+}) {
+  return (
+    <div
+      onClick={onPlay}
+      className="group relative grid cursor-pointer grid-cols-[24px_40px_minmax(0,1fr)_auto] items-center gap-3 border-b border-white/[.07] px-[10px] py-2 transition-[background-color] duration-150 ease-[cubic-bezier(.22,1,.36,1)] hover:bg-white/[.035] active:scale-[.998] md:grid-cols-[30px_44px_minmax(0,2fr)_minmax(0,1fr)_56px]"
+    >
+      <div className="grid place-items-center">
+        {isActive && isPlaying ? (
+          <span className="eq" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+          </span>
+        ) : (
+          <>
+            <span className="font-mono text-[11px] text-text-muted group-hover:hidden">{index + 1}</span>
+            <svg className="hidden h-[11px] w-[11px] text-text-primary group-hover:block" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </>
+        )}
+      </div>
+
+      <div className="relative h-10 w-10 flex-none overflow-hidden rounded-lg bg-bg-card md:h-11 md:w-11">
+        {song.coverUrl ? (
+          <img src={song.coverUrl} alt="" className="h-full w-full object-cover saturate-[.9]" />
+        ) : (
+          <div className="grid h-full w-full place-items-center text-text-secondary" style={tint(song.title)}>
+            <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
+            </svg>
+          </div>
+        )}
+      </div>
+
+      <div className="min-w-0">
+        <p className={`truncate text-[13.5px] font-medium ${isActive ? "text-accent" : "text-text-primary"}`}>
+          {song.title}
+        </p>
+        <p className="truncate text-[11.5px] text-text-muted">{song.artist}</p>
+      </div>
+
+      <p className="hidden min-w-0 truncate text-[12px] text-text-muted md:block">{song.album}</p>
+
+      <span className="hidden text-right font-mono text-[11.5px] text-text-muted md:block">
+        {formatTime(song.duration)}
+      </span>
+
+      {onRemove && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove();
+          }}
+          aria-label="Quitar del álbum"
+          title="Quitar del álbum"
+          className="grid h-[26px] w-[26px] place-items-center rounded-lg text-text-muted transition-[color,opacity] duration-150 ease-[cubic-bezier(.22,1,.36,1)] hover:text-red-400 md:absolute md:top-1/2 md:right-1.5 md:z-20 md:-translate-y-1/2 md:bg-bg-card md:opacity-0 md:group-focus-within:opacity-100 md:group-hover:opacity-100"
+        >
+          <svg className="h-4 w-4" {...iconProps}>
+            <path d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      )}
     </div>
   );
 }

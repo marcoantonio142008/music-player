@@ -18,18 +18,21 @@ export default function Sidebar({ currentView, onViewChange, onSelectPlaylist, o
     {
       id: "inicio",
       label: "Inicio",
+      count: undefined,
       icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        <svg className="h-[15px] w-[15px] flex-none" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+          <path d="M3 10.5 12 3l9 7.5" />
+          <path d="M5 9.5V21h14V9.5" />
         </svg>
       ),
     },
     {
       id: "biblioteca",
       label: "Biblioteca",
+      count: songs.length,
       icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+        <svg className="h-[15px] w-[15px] flex-none" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+          <path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" />
         </svg>
       ),
     },
@@ -41,96 +44,88 @@ export default function Sidebar({ currentView, onViewChange, onSelectPlaylist, o
   ];
 
   return (
-    <aside className="hidden md:flex flex-col w-64 purple-glass py-5 px-3 flex-shrink-0 overflow-y-auto rounded-r-2xl">
-      {/* Logo */}
-      <div className="flex items-center gap-2.5 px-3 mb-8">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-violet to-accent-pink flex items-center justify-center glow-violet">
-          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
-          </svg>
+    <aside className="hidden w-[236px] flex-shrink-0 flex-col gap-[22px] overflow-y-auto border-r border-white/[.07] bg-bg-secondary px-3 pt-[18px] pb-3 md:flex">
+      {/* Brand */}
+      <div className="flex items-center gap-2.5 px-2">
+        <div
+          className="grid h-[26px] w-[26px] place-items-center gap-[2px] rounded-lg border border-white/[.13] bg-bg-card"
+          aria-hidden="true"
+        >
+          <span className="flex h-[11px] items-end gap-[2px]">
+            <i className="block h-[6px] w-[2px] rounded-[1px] bg-text-secondary" />
+            <i className="block h-[11px] w-[2px] rounded-[1px] bg-text-primary" />
+            <i className="block h-[8px] w-[2px] rounded-[1px] bg-text-secondary" />
+          </span>
         </div>
-        <span className="text-base font-bold text-text-primary tracking-tight">
+        <span className="text-[13.5px] font-semibold tracking-[-.01em] text-text-primary">
           Mi Música
         </span>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex flex-col gap-1 mb-6">
+      {/* Main navigation */}
+      <nav className="flex flex-col gap-px" aria-label="Navegación principal">
         {navItems.map((item) => (
           <button
             key={item.id}
             onClick={() => onViewChange(item.id)}
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+            aria-current={currentView === item.id ? "page" : undefined}
+            className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13.5px] transition-[color,background-color] duration-150 ease-[cubic-bezier(.22,1,.36,1)] active:scale-[.99] ${
               currentView === item.id
-                ? "bg-accent-violet/20 text-accent-violet"
-                : "text-text-secondary hover:text-text-primary hover:bg-white/5"
+                ? "bg-white/[.06] text-text-primary"
+                : "text-text-secondary hover:bg-white/[.045] hover:text-text-primary"
             }`}
           >
             {item.icon}
             {item.label}
+            {item.count !== undefined && (
+              <span className="ml-auto font-mono text-[11px] text-text-muted">{item.count}</span>
+            )}
           </button>
         ))}
       </nav>
 
-      {/* Divider */}
-      <div className="h-px bg-accent-violet/10 mx-3 mb-6" />
-
-      {/* Quick Access */}
-      <div className="px-3 mb-3">
-        <h3 className="text-[11px] font-semibold text-text-muted uppercase tracking-wider mb-3">
-          Acceso rápido
-        </h3>
-      </div>
-      <div className="flex flex-col gap-0.5 mb-6">
+      {/* Quick access */}
+      <div className="flex flex-col gap-px">
+        <p className="px-2.5 pb-2 text-[10.5px] font-medium uppercase tracking-[.09em] text-text-muted">
+          Colecciones
+        </p>
         {quickAccess.map((item) => (
           <button
             key={item.id}
             onClick={() => onSelectQuickAccess?.(item.id)}
-            className={`flex items-center justify-between px-3 py-2 rounded-xl text-sm transition-all ${
-              currentView === "biblioteca"
-                ? "bg-accent-violet/20 text-accent-violet"
-                : "text-text-secondary hover:text-text-primary hover:bg-white/5"
-            }`}
+            className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13.5px] text-text-secondary transition-[color,background-color] duration-150 ease-[cubic-bezier(.22,1,.36,1)] hover:bg-white/[.045] hover:text-text-primary active:scale-[.99]"
           >
             <span className="truncate">{item.label}</span>
-            <span className="text-xs text-text-muted ml-2">{item.count}</span>
+            <span className="ml-auto font-mono text-[11px] text-text-muted">{item.count}</span>
           </button>
         ))}
       </div>
 
       {/* Playlists */}
       {playlists.length > 0 && (
-        <>
-          <div className="h-px bg-accent-violet/10 mx-3 mb-4" />
-          <div className="px-3 mb-3">
-            <h3 className="text-[11px] font-semibold text-text-muted uppercase tracking-wider mb-3">
-              Tus álbumes
-            </h3>
-          </div>
-          <div className="flex flex-col gap-0.5">
-            {playlists.map((playlist) => (
-              <button
-                key={playlist.id}
-                onClick={() => onSelectPlaylist?.(playlist.id)}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-text-secondary hover:text-text-primary hover:bg-white/5 transition-all"
-              >
-                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
-                <span className="truncate">{playlist.name}</span>
-                <span className="text-xs text-text-muted ml-auto">{playlist.songIds.length}</span>
-              </button>
-            ))}
-          </div>
-        </>
+        <div className="flex flex-col gap-px">
+          <p className="px-2.5 pb-2 text-[10.5px] font-medium uppercase tracking-[.09em] text-text-muted">
+            Playlists
+          </p>
+          {playlists.map((playlist) => (
+            <button
+              key={playlist.id}
+              onClick={() => onSelectPlaylist?.(playlist.id)}
+              className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13.5px] text-text-secondary transition-[color,background-color] duration-150 ease-[cubic-bezier(.22,1,.36,1)] hover:bg-white/[.045] hover:text-text-primary active:scale-[.99]"
+            >
+              <svg className="h-[15px] w-[15px] flex-none opacity-75" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+              <span className="truncate">{playlist.name}</span>
+              <span className="ml-auto font-mono text-[11px] text-text-muted">{playlist.songIds.length}</span>
+            </button>
+          ))}
+        </div>
       )}
 
-      {/* Import button at bottom */}
-      <div className="mt-auto pt-4 px-3">
-        <div className="h-px bg-accent-violet/10 mb-4" />
-        <p className="text-[10px] text-text-muted text-center">
-          {songs.length} {songs.length === 1 ? "canción" : "canciones"} en tu biblioteca
-        </p>
+      {/* Footer */}
+      <div className="mt-auto border-t border-white/[.07] px-2.5 pt-2.5 text-[11.5px] leading-snug text-text-muted">
+        Todo local. Nada sale de tu equipo.
       </div>
     </aside>
   );

@@ -1,27 +1,34 @@
-// Browser-only jsmediatags wrapper
-// Dynamically import to avoid pulling in ReactNativeFileReader
+// Browser-only jsmediatags wrapper.
+//
+// The `build2/jsmediatags` entry already registers BlobFileReader,
+// XhrFileReader and ArrayFileReader through its own Config, so there is
+// nothing to wire up here: importing the module is enough. (An earlier
+// version called `jsmediatags.addHandler`, which does not exist on this
+// build and made every parse throw, so all songs silently fell back to
+// filename + "Desconocido" + no cover.)
 
-let jsmediatagsModule: any = null;
+interface Picture {
+  format: string;
+  data: number[] | Uint8Array;
+}
 
-async function getJsmediatags() {
-  if (jsmediatagsModule) return jsmediatagsModule;
+interface TagPayload {
+  tags: {
+    title?: string;
+    artist?: string;
+    album?: string;
+    picture?: Picture;
+  };
+}
 
-  // Import only the browser-compatible parts
-  const [
-    { default: jsmediatags },
-    BlobFileReader,
-    XhrFileReader,
-  ] = await Promise.all([
-    import("jsmediatags/build2/jsmediatags"),
-    import("jsmediatags/build2/BlobFileReader"),
-    import("jsmediatags/build2/XhrFileReader"),
-  ]);
-
-  jsmediatags.addHandler("BlobFileReader", BlobFileReader.default || BlobFileReader);
-  jsmediatags.addHandler("XhrFileReader", XhrFileReader.default || XhrFileReader);
-
-  jsmediatagsModule = jsmediatags;
-  return jsmediatags;
+interface Jsmediatags {
+  read: (
+    file: File | Blob,
+    callbacks: {
+      onSuccess: (tag: TagPayload) => void;
+      onError: (error: unknown) => void;
+    }
+  ) => void;
 }
 
 export interface ParsedTags {
@@ -31,7 +38,20 @@ export interface ParsedTags {
   coverUrl: string | null;
 }
 
-function readCoverPicture(pic: { format: string; data: number[] }): string {
+let jsmediatagsModule: Jsmediatags | null = null;
+
+async function getJsmediatags(): Promise<Jsmediatags> {
+  if (jsmediatagsModule) return jsmediatagsModule;
+
+  const mod = await import("jsmediatags/build2/jsmediatags");
+  const jsmediatags = ((mod as { default?: Jsmediatags }).default ??
+    mod) as Jsmediatags;
+
+  jsmediatagsModule = jsmediatags;
+  return jsmediatags;
+}
+
+function readCoverPicture(pic: Picture): string {
   const bytes = new Uint8Array(pic.data);
   const blob = new Blob([bytes], { type: pic.format });
   return URL.createObjectURL(blob);
@@ -50,7 +70,7 @@ export async function parseAudioTags(file: File): Promise<ParsedTags> {
 
     return new Promise((resolve) => {
       jsmediatags.read(file, {
-        onSuccess: (tag: { tags: any }) => {
+        onSuccess: (tag) => {
           const t = tag.tags;
           resolve({
             title: t.title || fallback.title,

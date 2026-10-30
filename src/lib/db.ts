@@ -31,6 +31,8 @@ export interface StoredSong {
   liked: boolean;
   coverUrl: string | null;
   coverBlob?: Blob;
+  /** True once the automatic lookup ran and found nothing. Stops re-queries. */
+  coverSearchTried?: boolean;
   fileBlob: Blob;
   fileName: string;
   fileType: string;

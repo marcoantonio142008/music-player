@@ -51,20 +51,17 @@ export default function ProgressBar() {
         onMouseMove={handleDrag}
       >
         {/* Track background */}
-        <div className="absolute w-full h-1 bg-bg-card rounded-full group-hover:h-1.5 transition-all" />
+        <div className="absolute h-1 w-full rounded-full bg-white/[.07] transition-all group-hover:h-1.5" />
 
         {/* Filled track */}
         <div
-          className="absolute h-1 rounded-full group-hover:h-1.5 transition-all progress-smooth"
-          style={{
-            width: `${progress}%`,
-            background: "linear-gradient(90deg, #8b5cf6, #ec4899)",
-          }}
+          className="progress-smooth absolute h-1 rounded-full bg-accent transition-all group-hover:h-1.5"
+          style={{ width: `${progress}%` }}
         />
 
         {/* Thumb */}
         <div
-          className="absolute w-3 h-3 bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+          className="absolute h-3 w-3 rounded-full bg-text-primary opacity-0 shadow-[0_2px_8px_rgba(0,0,0,.5)] transition-opacity group-hover:opacity-100"
           style={{ left: `calc(${progress}% - 6px)` }}
         />
       </div>
